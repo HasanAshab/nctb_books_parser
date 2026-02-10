@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import json
 import os
 
+
 target_page = "https://nctb.gov.bd/pages/static-pages/695b98afc4774958d7b7044c"
 
 def scrape_booklist():

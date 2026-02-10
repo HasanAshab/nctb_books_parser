@@ -70,7 +70,7 @@ def scrape_book_pdfs():
                     # English version
                     english_name = cells[3].get_text(strip=True)
                     english_links = cells[4].find_all('a')
-                    english_url = english_links[0].get('href') if english_links else None
+                    english_url = f"{english_links[1].get('href')}/download" if english_links else None
                     
                     if english_name:
                         result.append({
@@ -86,12 +86,12 @@ def scrape_book_pdfs():
                 if len(cells) >= 3:
                     book_name = cells[1].get_text(strip=True)
                     links = cells[2].find_all('a')
-                    book_url = links[0].get('href') if links else None
+                    book_url = f"{links[1].get('href')}/download" if links else None
                     
                     if book_name:
                         result.append({
-                            'booklist_url': url,
                             'book_name': book_name,
+                            'class': item['class'],
                             'version': None,
                             'url': book_url
                         })
