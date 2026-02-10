@@ -2,6 +2,7 @@ import json
 import os
 import re
 import requests
+import urllib3
 from urllib.parse import urlparse, parse_qs
 
 def extract_file_id(url):
@@ -43,8 +44,9 @@ def download_books():
 
     downloaded = 0
     skipped = 0
+    total = len(books)
 
-    for book in books:
+    for idx, book in enumerate(books, 1):
         url = book.get('url')
         if not url:
             skipped += 1
@@ -59,20 +61,21 @@ def download_books():
         # Check if already downloaded
         output_path = os.path.join(books_dir, f"{file_id}.pdf")
         if os.path.exists(output_path):
-            print(f"Skipping {file_id}.pdf (already exists)")
+            print(f"[{idx}/{total}] Skipping {file_id}.pdf (already exists)")
             skipped += 1
             continue
         
         # Download
         try:
-            print(f"Downloading {file_id}.pdf...")
+            print(f"[{idx}/{total}] Downloading {file_id}.pdf...")
             download_file(url, output_path)
             downloaded += 1
         except Exception as e:
-            print(f"Failed to download {file_id}: {e}")
+            print(f"[{idx}/{total}] Failed to download {file_id}: {e}")
             skipped += 1
     
     print(f"Downloaded {downloaded} PDFs, Skipped {skipped}")
 
 if __name__ == "__main__":
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     download_books()
