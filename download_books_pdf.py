@@ -1,0 +1,78 @@
+import json
+import os
+import re
+import requests
+from urllib.parse import urlparse, parse_qs
+
+def extract_file_id(url):
+    """Extract file ID from URL"""
+    if not url:
+        return None
+
+    # Pattern for egovcloud: /s/{id}/download or /s/{id}
+    match = re.search(r'/s/([a-zA-Z0-9_-]+)', url)
+    if match:
+        return match.group(1)
+    
+    return None
+
+def download_file(url, output_path):
+    """Download file from URL"""
+    response = requests.get(url, stream=True, verify=False)
+    response.raise_for_status()
+
+    # Save file
+    with open(output_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=32768):
+            if chunk:
+                f.write(chunk)
+
+def download_books():
+    print("Downloading Book PDFs")
+    
+    # Read book_pdf_url.json
+    maps_dir = 'maps'
+    book_pdf_file = os.path.join(maps_dir, 'book_pdf_url.json')
+    
+    with open(book_pdf_file, 'r', encoding='utf-8') as f:
+        books = json.load(f)
+
+    # Create books directory
+    books_dir = 'books'
+    os.makedirs(books_dir, exist_ok=True)
+
+    downloaded = 0
+    skipped = 0
+
+    for book in books:
+        url = book.get('url')
+        if not url:
+            skipped += 1
+            continue
+
+        # Extract file ID
+        file_id = extract_file_id(url)
+        if not file_id:
+            skipped += 1
+            continue
+        
+        # Check if already downloaded
+        output_path = os.path.join(books_dir, f"{file_id}.pdf")
+        if os.path.exists(output_path):
+            print(f"Skipping {file_id}.pdf (already exists)")
+            skipped += 1
+            continue
+        
+        # Download
+        try:
+            print(f"Downloading {file_id}.pdf...")
+            download_file(url, output_path)
+            downloaded += 1
+        except Exception as e:
+            print(f"Failed to download {file_id}: {e}")
+            skipped += 1
+    
+    print(f"Downloaded {downloaded} PDFs, Skipped {skipped}")
+
+if __name__ == "__main__":
+    download_books()
