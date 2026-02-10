@@ -19,14 +19,25 @@ def extract_file_id(url):
 
 def download_file(url, output_path):
     """Download file from URL"""
-    response = requests.get(url, stream=True, verify=False)
-    response.raise_for_status()
+    temp_path = output_path + '.tmp'
+    
+    try:
+        response = requests.get(url, stream=True, verify=False)
+        response.raise_for_status()
 
-    # Save file
-    with open(output_path, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=32768):
-            if chunk:
-                f.write(chunk)
+        # Save to temporary file first
+        with open(temp_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=32768):
+                if chunk:
+                    f.write(chunk)
+        
+        # Rename to final name only if download completed
+        os.rename(temp_path, output_path)
+    except:
+        # Clean up temporary file if download failed or interrupted
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+        raise
 
 def download_books():
     print("Downloading Book PDFs")
